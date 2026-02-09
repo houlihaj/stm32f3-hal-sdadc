@@ -24,7 +24,7 @@
 #include "lwrb/lwrb.h"  /* lwrb_t */
 #include "printf.h"     /* snprintf_ */
 #include <stdint.h>
-#include <string.h>     /* size_t, strlen */
+#include <string.h>     /* size_t, strSNPRINTF_BUFFER_SIZE */
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,9 +40,10 @@ typedef enum {
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LWRB_SIZE           128
-#define SDADC1_CH5_VALUE    5
-#define SDADC3_CH8_VALUE    8
+#define LWRB_SIZE               128
+#define SDADC1_CH5_VALUE        5
+#define SDADC3_CH8_VALUE        8
+#define SNPRINTF_BUFFER_SIZE    64
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -60,6 +61,11 @@ UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USER CODE BEGIN PV */
+
+/**
+ * \brief
+ */
+char snprintf_buf[SNPRINTF_BUFFER_SIZE];
 
 /**
  * \brief  Ring buffer instance for TX data
@@ -367,7 +373,7 @@ static void MX_TIM15_Init(void)
 
   /* USER CODE END TIM15_Init 1 */
   htim15.Instance = TIM15;
-  htim15.Init.Prescaler = 12;
+  htim15.Init.Prescaler = 12000;  // 12;
   htim15.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim15.Init.Period = 4000;
   htim15.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -525,30 +531,39 @@ void user_uart_println(char* msg)
   */
 void HAL_SDADC_InjectedConvCpltCallback(SDADC_HandleTypeDef *hsdadc)
 {
-    size_t len = 32;
-    char msg[len];
-
     /* Get conversion value */
     InjectedConvData = HAL_SDADC_InjectedGetValue(hsdadc, (uint32_t *) &InjChannel);
 
     if (hsdadc == &hsdadc1)
     {
         if (InjChannel == SDADC1_CH5_VALUE) {
-            snprintf_(msg, len, "%d\r\n", InjectedConvData);
-            user_uart_println(msg);
+            snprintf_(
+                snprintf_buf, SNPRINTF_BUFFER_SIZE,
+                "hsdadc1; ch: %d; data: %d;\r\n", InjChannel, InjectedConvData
+            );
         } else {
-            // Converter::addToAverage(dev.info().iMon, (float)InjectedConvData);
+            snprintf_(
+                snprintf_buf, SNPRINTF_BUFFER_SIZE,
+                "hsdadc1; ch: %d; data: %d;\r\n", InjChannel, InjectedConvData
+            );
         }
+        user_uart_println(snprintf_buf);
     }
     else if (hsdadc == &hsdadc3)
     {
         if (InjChannel == SDADC3_CH8_VALUE) {
-            snprintf_(msg, len, "%d\r\n", InjectedConvData);
-            user_uart_println(msg);
+            snprintf_(
+                snprintf_buf, SNPRINTF_BUFFER_SIZE,
+                "hsdadc3; ch: %d; data: %d;\r\n", InjChannel, InjectedConvData
+            );
         }
         else {
-            // Converter::addToAverage(dev.info().vBat, (float)InjectedConvData);
+            snprintf_(
+                snprintf_buf, SNPRINTF_BUFFER_SIZE,
+                "hsdadc3; ch: %d; data: %d;\r\n", InjChannel, InjectedConvData
+            );
         }
+        user_uart_println(snprintf_buf);
     }
 }
 
