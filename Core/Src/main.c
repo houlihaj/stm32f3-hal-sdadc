@@ -52,10 +52,10 @@ typedef enum {
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-SDADC_HandleTypeDef hsdadc1;
-SDADC_HandleTypeDef hsdadc3;
+SDADC_HandleTypeDef hsdadc1;  /* hsdadc1 is a handle to manage the SDADC1 */
+SDADC_HandleTypeDef hsdadc3;  /* hsdadc3 is a handle to manage the SDADC3 */
 
-TIM_HandleTypeDef htim15;
+TIM_HandleTypeDef htim15;  /* htim15 is a handle to manage the TIMER */
 
 UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_rx;
@@ -90,6 +90,11 @@ __IO int16_t InjectedConvData = 0;
 *         conversion. This is not used in this example.
 */
 __IO uint32_t InjChannel = 0;
+
+/**
+  * @brief Text strings printed on PC Com port for user information
+  */
+char aTextInfoStart[] = "\r\nUSART Example : Enter characters to fill reception buffers.\r\n";
 
 /* USER CODE END PV */
 
@@ -145,6 +150,51 @@ int main(void)
   MX_SDADC3_Init();
   MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
+
+  /* Print user info on PC com port */
+  user_uart_println(aTextInfoStart);
+
+    /* Start the TIMER's Channel */
+    if (HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_2) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    /* Start Calibration in polling mode */
+    if (HAL_SDADC_CalibrationStart(&hsdadc1, SDADC_CALIBRATION_SEQ_1) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    /* Pool for the end of calibration */
+    if (HAL_SDADC_PollForCalibEvent(&hsdadc1, HAL_MAX_DELAY) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    /* Start injected conversion in interrupt mode */
+    if (HAL_SDADC_InjectedStart_IT(&hsdadc1) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    /* Start Calibration in polling mode */
+    if (HAL_SDADC_CalibrationStart(&hsdadc3, SDADC_CALIBRATION_SEQ_1) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    /* Pool for the end of calibration */
+    if (HAL_SDADC_PollForCalibEvent(&hsdadc3, HAL_MAX_DELAY) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    /* Start injected conversion in interrupt mode */
+    if (HAL_SDADC_InjectedStart_IT(&hsdadc3) != HAL_OK)
+    {
+        Error_Handler();
+    }
 
   /* USER CODE END 2 */
 
@@ -539,12 +589,12 @@ void HAL_SDADC_InjectedConvCpltCallback(SDADC_HandleTypeDef *hsdadc)
         if (InjChannel == SDADC1_CH5_VALUE) {
             snprintf_(
                 snprintf_buf, SNPRINTF_BUFFER_SIZE,
-                "hsdadc1; ch: %d; data: %d;\r\n", InjChannel, InjectedConvData
+                "hsdadc1; ch: %ld; data: %d;\r\n", InjChannel, InjectedConvData
             );
         } else {
             snprintf_(
                 snprintf_buf, SNPRINTF_BUFFER_SIZE,
-                "hsdadc1; ch: %d; data: %d;\r\n", InjChannel, InjectedConvData
+                "hsdadc1; ch: %ld; data: %d;\r\n", InjChannel, InjectedConvData
             );
         }
         user_uart_println(snprintf_buf);
@@ -554,13 +604,13 @@ void HAL_SDADC_InjectedConvCpltCallback(SDADC_HandleTypeDef *hsdadc)
         if (InjChannel == SDADC3_CH8_VALUE) {
             snprintf_(
                 snprintf_buf, SNPRINTF_BUFFER_SIZE,
-                "hsdadc3; ch: %d; data: %d;\r\n", InjChannel, InjectedConvData
+                "hsdadc3; ch: %ld; data: %d;\r\n", InjChannel, InjectedConvData
             );
         }
         else {
             snprintf_(
                 snprintf_buf, SNPRINTF_BUFFER_SIZE,
-                "hsdadc3; ch: %d; data: %d;\r\n", InjChannel, InjectedConvData
+                "hsdadc3; ch: %ld; data: %d;\r\n", InjChannel, InjectedConvData
             );
         }
         user_uart_println(snprintf_buf);
