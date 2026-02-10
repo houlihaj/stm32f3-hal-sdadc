@@ -107,6 +107,7 @@ static void MX_SDADC1_Init(void);
 static void MX_SDADC3_Init(void);
 static void MX_TIM15_Init(void);
 /* USER CODE BEGIN PFP */
+void my_buff_evt_fn(lwrb_t* buff, lwrb_evt_type_t type, size_t len);
 void user_uart_println(char* msg);
 /* USER CODE END PFP */
 
@@ -123,6 +124,9 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+
+    lwrb_init(&sdadc1_ch5_rb, sdadc1_ch5_rb_data, sizeof(sdadc1_ch5_rb_data));
+    lwrb_set_evt_fn(&sdadc1_ch5_rb, my_buff_evt_fn);
 
   /* USER CODE END 1 */
 
@@ -552,6 +556,36 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /**
+ * \brief  Buffer event function
+ */
+void my_buff_evt_fn(lwrb_t* buff, lwrb_evt_type_t type, size_t len)
+{
+    switch (type) {
+        case LWRB_EVT_RESET:
+            // printf("[EVT] Buffer reset event!\r\n");
+            user_uart_println("[EVT] Buffer reset event!\r\n");
+            break;
+        case LWRB_EVT_READ:
+            // printf("[EVT] Buffer read event: %d byte(s)!\r\n", (int)len);
+            snprintf_(
+                snprintf_buf, SNPRINTF_BUFFER_SIZE,
+                "[EVT] Buffer read event: %d byte(s)!\r\n", (int)len
+            );
+            user_uart_println(snprintf_buf);
+            break;
+        case LWRB_EVT_WRITE:
+            // printf("[EVT] Buffer write event: %d byte(s)!\r\n", (int)len);
+            snprintf_(
+                snprintf_buf, SNPRINTF_BUFFER_SIZE,
+                "[EVT] Buffer write event: %d byte(s)!\r\n", (int)len
+            );
+            user_uart_println(snprintf_buf);
+            break;
+        default: break;
+    }
+}
+
+/**
   * @brief  Send text information message on UART Tx line (to PC Com port).
   * @note
   * @param[in] msg  String to be sent to user display
@@ -589,32 +623,34 @@ void HAL_SDADC_InjectedConvCpltCallback(SDADC_HandleTypeDef *hsdadc)
         if (InjChannel == SDADC1_CH5_VALUE) {
             snprintf_(
                 snprintf_buf, SNPRINTF_BUFFER_SIZE,
-                "hsdadc1; ch: %ld; data: %d;\r\n", InjChannel, InjectedConvData
+                "hsdadc1; ch: %ld; data: %d\r\n", InjChannel, InjectedConvData
             );
         } else {
             snprintf_(
                 snprintf_buf, SNPRINTF_BUFFER_SIZE,
-                "hsdadc1; ch: %ld; data: %d;\r\n", InjChannel, InjectedConvData
+                "hsdadc1; ch: %ld; data: %d\r\n", InjChannel, InjectedConvData
             );
         }
-        user_uart_println(snprintf_buf);
+        lwrb_write(&sdadc1_ch5_rb, "1", 1);
     }
     else if (hsdadc == &hsdadc3)
     {
         if (InjChannel == SDADC3_CH8_VALUE) {
             snprintf_(
                 snprintf_buf, SNPRINTF_BUFFER_SIZE,
-                "hsdadc3; ch: %ld; data: %d;\r\n", InjChannel, InjectedConvData
+                "hsdadc3; ch: %ld; data: %d\r\n", InjChannel, InjectedConvData
             );
         }
         else {
             snprintf_(
                 snprintf_buf, SNPRINTF_BUFFER_SIZE,
-                "hsdadc3; ch: %ld; data: %d;\r\n", InjChannel, InjectedConvData
+                "hsdadc3; ch: %ld; data: %d\r\n", InjChannel, InjectedConvData
             );
         }
-        user_uart_println(snprintf_buf);
+        // lwrb_write(&sdadc3_ch8_rb, "3", 1);
     }
+
+    user_uart_println(snprintf_buf);
 }
 
 /* USER CODE END 4 */
