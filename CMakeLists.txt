@@ -45,6 +45,8 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
+    ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/cli.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/cli_cmd_fns.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/printf.c
     ${CMAKE_CURRENT_SOURCE_DIR}/External/lwrb/lwrb/src/lwrb/lwrb.c
     ${CMAKE_CURRENT_SOURCE_DIR}/External/lwrb/lwrb/src/lwrb/lwrb_ex.c
