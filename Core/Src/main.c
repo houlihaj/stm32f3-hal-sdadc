@@ -38,6 +38,13 @@ typedef enum {
     SDADC3_CH8
 } sdadc_inj_channels_t;
 
+typedef struct sensor_data_t sensor_data_t;
+
+struct sensor_data_t {
+    int16_t sdadc1_ch5;
+    int16_t sdadc3_ch8;
+};
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -64,6 +71,11 @@ UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USER CODE BEGIN PV */
+
+/**
+  * @brief sensor_data_t implementation
+  */
+sensor_data_t sensor_data = {0};
 
 /**
   * @brief cli.c
@@ -129,7 +141,7 @@ static void MX_TIM15_Init(void);
 /* USER CODE BEGIN PFP */
 void my_buff_evt_fn(lwrb_t* buff, lwrb_evt_type_t type, size_t len);
 void StartReception(void);
-void UserDataTreatment(UART_HandleTypeDef *huart, uint8_t* pData, uint16_t Size);
+void UserDataTreatment(UART_HandleTypeDef* huart, uint8_t* pData, uint16_t Size);
 void user_uart_println(char* msg);
 /* USER CODE END PFP */
 
@@ -150,12 +162,6 @@ int main(void)
     /* lwrc.c */
     lwrb_init(&sdadc1_ch5_rb, sdadc1_ch5_rb_data, sizeof(sdadc1_ch5_rb_data));
     lwrb_set_evt_fn(&sdadc1_ch5_rb, my_buff_evt_fn);
-
-    /* cli.c */
-    cli.println = user_uart_println;
-    /* Set the cli_t (i.e. cli) cmd_tbl and cmd_cnt members */
-    cli_set_cmd_members(&cli);
-    cli_init(&cli);
 
   /* USER CODE END 1 */
 
@@ -183,6 +189,15 @@ int main(void)
   MX_SDADC3_Init();
   MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
+
+    /* Print user info on PC com port */
+    user_uart_println(aTextInfoStart);
+
+    /* cli.c */
+    cli.println = user_uart_println;
+    /* Set the cli_t (i.e. cli) cmd_tbl and cmd_cnt members */
+    cli_set_cmd_members(&cli);
+    cli_init(&cli);
 
     /* Initiate Continuous reception */
     StartReception();
@@ -788,9 +803,10 @@ void HAL_SDADC_InjectedConvCpltCallback(SDADC_HandleTypeDef* hsdadc)
     if (hsdadc == &hsdadc1)
     {
         if (InjChannel == SDADC1_CH5_VALUE) {
+            sensor_data.sdadc1_ch5 = InjectedConvData;
             snprintf_(
                 snprintf_buf, SNPRINTF_BUFFER_SIZE,
-                "hsdadc1; ch: %ld; data: %d\r\n", InjChannel, InjectedConvData
+                "hsdadc1; ch: %ld; data: %d\r\n", InjChannel, sensor_data.sdadc1_ch5
             );
         } else {
             snprintf_(
@@ -803,9 +819,10 @@ void HAL_SDADC_InjectedConvCpltCallback(SDADC_HandleTypeDef* hsdadc)
     else if (hsdadc == &hsdadc3)
     {
         if (InjChannel == SDADC3_CH8_VALUE) {
+            sensor_data.sdadc3_ch8 = InjectedConvData;
             snprintf_(
                 snprintf_buf, SNPRINTF_BUFFER_SIZE,
-                "hsdadc3; ch: %ld; data: %d\r\n", InjChannel, InjectedConvData
+                "hsdadc3; ch: %ld; data: %d\r\n", InjChannel, sensor_data.sdadc3_ch8
             );
         }
         else {
